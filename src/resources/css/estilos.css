@@ -1,0 +1,14 @@
+.root {
+    /* Substitua pelo caminho da sua imagem */
+    -fx-background-image: url("FundoGradiente.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-size: cover; /* Faz a imagem ocupar todo o fundo sem distorcer */
+    -fx-background-position: center;
+}
+
+/* DICA: Deixe os containers do CRUD semi-transparentes para legibilidade */
+.main-container {
+    -fx-background-color: rgba(255, 255, 255, 0.85); /* Fundo branco com 85% de opacidade */
+    -fx-background-radius: 15;
+    -fx-padding: 20;
+}
