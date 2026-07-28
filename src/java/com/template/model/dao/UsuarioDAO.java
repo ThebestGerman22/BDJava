@@ -15,6 +15,8 @@ import java.util.logging.Logger;
 import com.template.model.dto.UsuarioDTO;
 import com.template.model.ConexaoBD;
 
+import static com.template.util.DialogUtil.*;
+
 //Parte responsável pelas operações do CRUD no banco de dados
 
 public class UsuarioDAO {
@@ -39,6 +41,7 @@ public class UsuarioDAO {
         } catch (SQLException e) {
 
             logger.log(Level.SEVERE, "Erro ao cadastrar utilizador", e);
+            showError("Falha ao cadastrar o usuario");
             return false;
         }
     }
@@ -65,6 +68,7 @@ public class UsuarioDAO {
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Erro ao listar utilizadores", e);
+            showError("Falha ao listar os usuários");
         }
 
         return listaUsuarios;
@@ -88,6 +92,7 @@ public class UsuarioDAO {
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Erro ao alterar utilizador", e);
+            showError("Falha ao alterar o usuario");
             return false;
         }
     }
@@ -104,6 +109,7 @@ public class UsuarioDAO {
 
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Erro ao excluir utilizador", e);
+            showError("Erro ao excluir o usuario");
             return false;
         }
     }

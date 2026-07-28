@@ -1,4 +1,4 @@
-package com.template;
+package com.template.controller;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -7,6 +7,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.event.ActionEvent;
 
@@ -16,6 +18,10 @@ import java.util.ResourceBundle;
 
 import com.template.model.dto.UsuarioDTO;
 import com.template.model.dao.UsuarioDAO;
+
+import static com.template.util.DialogUtil.*;
+
+
 
 public class MainController implements Initializable {
 
@@ -38,106 +44,151 @@ public class MainController implements Initializable {
     @FXML private TextField txtLogin;
     @FXML private TextField txtEspecialidade;
 
+    @FXML private Label lblMensagem;
+
     @Override
+
     public void initialize(URL url, ResourceBundle rb) {
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+
+        colId.setCellFactory(col -> new TableCell<UsuarioDTO, Integer>() {
+
+            @Override
+
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (empty) {
+                    setText(null);
+                } else {
+                    setText(String.valueOf(getIndex() + 1));
+                }
+            }
+        });
         colNome.setCellValueFactory(new PropertyValueFactory<>("nome"));
         colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colSenha.setCellValueFactory(new PropertyValueFactory<>("senha"));
         colLogin.setCellValueFactory(new PropertyValueFactory<>("login"));
         colEspecialidade.setCellValueFactory(new PropertyValueFactory<>("especialidade"));
-
         carregarUsuarios();
-    }
 
+    }
     @FXML
     private void carregarUsuarios() {
-        UsuarioDAO objUsuarioDAO = new UsuarioDAO();
-        List<UsuarioDTO> listaUsuarios = objUsuarioDAO.selecionarUsuarios();
+        UsuarioDAO Carregar = new UsuarioDAO();
+        List<UsuarioDTO> listaUsuarios = Carregar.selecionarUsuarios();
         tblEspecialidadesMedicas.setItems(FXCollections.observableArrayList(listaUsuarios));
-    }
 
+    }
     @FXML
     private void carregarCampos() {
-        UsuarioDTO objUsuarioDTO = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
+        UsuarioDTO Update = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
 
-        if (objUsuarioDTO != null) {
-            txtNome.setText(objUsuarioDTO.getNome());
-            txtEmail.setText(objUsuarioDTO.getEmail());
-            txtSenha.setText(objUsuarioDTO.getSenha());
-            txtLogin.setText(objUsuarioDTO.getLogin());
-            txtEspecialidade.setText(objUsuarioDTO.getEspecialidade());
+        if (Update != null) {
+            lblMensagem.setText("");
+            txtNome.setText(Update.getNome());
+            txtEmail.setText(Update.getEmail());
+            txtSenha.setText(Update.getSenha());
+            txtLogin.setText(Update.getLogin());
+            txtEspecialidade.setText(Update.getEspecialidade());
+
         }
+
     }
+
+
 
     @FXML
     private void btnSalvarAction(ActionEvent event) {
+        if (txtNome.getText().trim().isEmpty() || txtEmail.getText().trim().isEmpty() ||
+                txtSenha.getText().trim().isEmpty() || txtLogin.getText().trim().isEmpty() ||
+                txtEspecialidade.getText().trim().isEmpty()) {
+
+                     lblMensagem.setText("Todos os campos devem ser preenchidos!");
+                     lblMensagem.setStyle("-fx-text-fill: red;");
+                      return;
+
+        }
+
+
+
         String nome = txtNome.getText();
         String email = txtEmail.getText();
         String senha = txtSenha.getText();
         String login = txtLogin.getText();
         String especialidade = txtEspecialidade.getText();
 
-        UsuarioDTO objusuariodto = new UsuarioDTO();
+        UsuarioDTO Salvamento = new UsuarioDTO();
 
-
-
-        objusuariodto.setNome(nome);
-        objusuariodto.setEmail(email);
-        objusuariodto.setSenha(senha);
-        objusuariodto.setLogin(login);
-        objusuariodto.setEspecialidade(especialidade);
-
+        Salvamento.setNome(nome);
+        Salvamento.setEmail(email);
+        Salvamento.setSenha(senha);
+        Salvamento.setLogin(login);
+        Salvamento.setEspecialidade(especialidade);
         UsuarioDAO objusuariodao = new UsuarioDAO();
-        objusuariodao.cadastrarUsuario(objusuariodto);
+        objusuariodao.cadastrarUsuario(Salvamento);
+        showInfo("Usuario cadastrado com sucesso!");
 
         carregarUsuarios();
-
-
         txtNome.clear();
         txtEmail.clear();
         txtSenha.clear();
         txtLogin.clear();
         txtEspecialidade.clear();
+
+        lblMensagem.setText("Usuário cadastrado com sucesso!");
+        lblMensagem.setStyle("-fx-text-fill: green;");
+
     }
-
-
     @FXML
+
     private void btnLimparAction(ActionEvent event) {
+
         txtNome.clear();
         txtEmail.clear();
         txtSenha.clear();
         txtLogin.clear();
         txtEspecialidade.clear();
-
-
         tblEspecialidadesMedicas.getSelectionModel().clearSelection();
-    }
+        lblMensagem.setText("");
 
+    }
     @FXML
+
     private void btnDeletarAction(ActionEvent event) {
 
         UsuarioDTO usuarioSelecionado = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
-
         if (usuarioSelecionado != null) {
             UsuarioDAO dao = new UsuarioDAO();
-
             dao.excluirUsuario(usuarioSelecionado.getId());
-
-
             carregarUsuarios();
             btnLimparAction(null);
+            lblMensagem.setText("Usuário deletado com sucesso!");
+            lblMensagem.setStyle("-fx-text-fill: green;");
         } else {
-            System.out.println("Selecione um funcionário na tabela para deletar.");
+            lblMensagem.setText("Selecione um funcionário na tabela para deletar.");
+            lblMensagem.setStyle("-fx-text-fill: red;");
+
         }
+
     }
 
-
     @FXML
+
     private void btnAtualizarAction(ActionEvent event) {
         UsuarioDTO usuarioSelecionado = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
 
+
+
         if (usuarioSelecionado != null) {
+
+            if (txtNome.getText().trim().isEmpty() || txtEmail.getText().trim().isEmpty() ||
+                    txtSenha.getText().trim().isEmpty() || txtLogin.getText().trim().isEmpty() ||
+                    txtEspecialidade.getText().trim().isEmpty()) {
+
+                      lblMensagem.setText("Todos os campos devem ser preenchidos para atualizar!");
+                      lblMensagem.setStyle("-fx-text-fill: red;");
+                return;
+            }
 
             usuarioSelecionado.setNome(txtNome.getText());
             usuarioSelecionado.setEmail(txtEmail.getText());
@@ -150,8 +201,18 @@ public class MainController implements Initializable {
 
             carregarUsuarios();
             btnLimparAction(null);
+
+            lblMensagem.setText("Usuário atualizado com sucesso!");
+            lblMensagem.setStyle("-fx-text-fill: green;");
+
         } else {
-            System.out.println("Selecione um funcionário na tabela para atualizar.");
+
+            lblMensagem.setText("Selecione um funcionário na tabela para atualizar.");
+            lblMensagem.setStyle("-fx-text-fill: red;");
+
         }
+
     }
-}
+
+} 
+
