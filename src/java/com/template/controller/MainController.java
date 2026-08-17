@@ -13,11 +13,11 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.event.ActionEvent;
 
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 import com.template.model.dto.UsuarioDTO;
-import com.template.model.dao.UsuarioDAO;
+import com.template.service.UsuarioService;
+import com.template.validator.UsuarioValidator;
 
 public class MainController implements Initializable {
 
@@ -41,6 +41,9 @@ public class MainController implements Initializable {
     @FXML private TextField txtEspecialidade;
 
     @FXML private Label lblMensagem;
+
+    private final UsuarioService usuarioService = new UsuarioService();
+    private final UsuarioValidator usuarioValidator = new UsuarioValidator();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -67,9 +70,7 @@ public class MainController implements Initializable {
 
     @FXML
     private void carregarUsuarios() {
-        UsuarioDAO objUsuarioDAO = new UsuarioDAO();
-        List<UsuarioDTO> listaUsuarios = objUsuarioDAO.selecionarUsuarios();
-        tblEspecialidadesMedicas.setItems(FXCollections.observableArrayList(listaUsuarios));
+        tblEspecialidadesMedicas.setItems(FXCollections.observableArrayList(usuarioService.listarUsuarios()));
     }
 
     @FXML
@@ -88,54 +89,35 @@ public class MainController implements Initializable {
 
     @FXML
     private void btnSalvarAction(ActionEvent event) {
-        if (txtNome.getText().trim().isEmpty() || txtEmail.getText().trim().isEmpty() ||
-                txtSenha.getText().trim().isEmpty() || txtLogin.getText().trim().isEmpty() ||
-                txtEspecialidade.getText().trim().isEmpty()) {
+        boolean valido = usuarioValidator.validarCamposPreenchidos(
+                txtNome.getText(),
+                txtEmail.getText(),
+                txtSenha.getText(),
+                txtLogin.getText(),
+                txtEspecialidade.getText()
+        );
 
-            lblMensagem.setText("Todos os campos devem ser preenchidos!");
-            lblMensagem.setStyle("-fx-text-fill: red;");
+        if (!valido) {
+            exibirMensagem("Todos os campos devem ser preenchidos!", true);
             return;
         }
 
-        String nome = txtNome.getText();
-        String email = txtEmail.getText();
-        String senha = txtSenha.getText();
-        String login = txtLogin.getText();
-        String especialidade = txtEspecialidade.getText();
-
-        UsuarioDTO objusuariodto = new UsuarioDTO();
-
-        objusuariodto.setNome(nome);
-        objusuariodto.setEmail(email);
-        objusuariodto.setSenha(senha);
-        objusuariodto.setLogin(login);
-        objusuariodto.setEspecialidade(especialidade);
-
-        UsuarioDAO objusuariodao = new UsuarioDAO();
-        objusuariodao.cadastrarUsuario(objusuariodto);
+        usuarioService.cadastrarUsuario(
+                txtNome.getText(),
+                txtEmail.getText(),
+                txtSenha.getText(),
+                txtLogin.getText(),
+                txtEspecialidade.getText()
+        );
 
         carregarUsuarios();
-
-        txtNome.clear();
-        txtEmail.clear();
-        txtSenha.clear();
-        txtLogin.clear();
-        txtEspecialidade.clear();
-
-        lblMensagem.setText("Usuário cadastrado com sucesso!");
-        lblMensagem.setStyle("-fx-text-fill: green;");
+        limparCamposFormulario();
+        exibirMensagem("Usuário cadastrado com sucesso!", false);
     }
 
     @FXML
     private void btnLimparAction(ActionEvent event) {
-        txtNome.clear();
-        txtEmail.clear();
-        txtSenha.clear();
-        txtLogin.clear();
-        txtEspecialidade.clear();
-
-        tblEspecialidadesMedicas.getSelectionModel().clearSelection();
-
+        limparCamposFormulario();
         lblMensagem.setText("");
     }
 
@@ -144,17 +126,12 @@ public class MainController implements Initializable {
         UsuarioDTO usuarioSelecionado = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
 
         if (usuarioSelecionado != null) {
-            UsuarioDAO dao = new UsuarioDAO();
-            dao.excluirUsuario(usuarioSelecionado.getId());
-
+            usuarioService.deletarUsuario(usuarioSelecionado.getId());
             carregarUsuarios();
-            btnLimparAction(null);
-
-            lblMensagem.setText("Usuário deletado com sucesso!");
-            lblMensagem.setStyle("-fx-text-fill: green;");
+            limparCamposFormulario();
+            exibirMensagem("Usuário deletado com sucesso!", false);
         } else {
-            lblMensagem.setText("Selecione um funcionário na tabela para deletar.");
-            lblMensagem.setStyle("-fx-text-fill: red;");
+            exibirMensagem("Selecione um funcionário na tabela para deletar.", true);
         }
     }
 
@@ -162,33 +139,49 @@ public class MainController implements Initializable {
     private void btnAtualizarAction(ActionEvent event) {
         UsuarioDTO usuarioSelecionado = tblEspecialidadesMedicas.getSelectionModel().getSelectedItem();
 
-        if (usuarioSelecionado != null) {
-            if (txtNome.getText().trim().isEmpty() || txtEmail.getText().trim().isEmpty() ||
-                    txtSenha.getText().trim().isEmpty() || txtLogin.getText().trim().isEmpty() ||
-                    txtEspecialidade.getText().trim().isEmpty()) {
-
-                lblMensagem.setText("Todos os campos devem ser preenchidos para atualizar!");
-                lblMensagem.setStyle("-fx-text-fill: red;");
-                return;
-            }
-
-            usuarioSelecionado.setNome(txtNome.getText());
-            usuarioSelecionado.setEmail(txtEmail.getText());
-            usuarioSelecionado.setSenha(txtSenha.getText());
-            usuarioSelecionado.setLogin(txtLogin.getText());
-            usuarioSelecionado.setEspecialidade(txtEspecialidade.getText());
-
-            UsuarioDAO dao = new UsuarioDAO();
-            dao.alterarUsuario(usuarioSelecionado);
-
-            carregarUsuarios();
-            btnLimparAction(null);
-
-            lblMensagem.setText("Usuário atualizado com sucesso!");
-            lblMensagem.setStyle("-fx-text-fill: green;");
-        } else {
-            lblMensagem.setText("Selecione um funcionário na tabela para atualizar.");
-            lblMensagem.setStyle("-fx-text-fill: red;");
+        if (usuarioSelecionado == null) {
+            exibirMensagem("Selecione um funcionário na tabela para atualizar.", true);
+            return;
         }
+
+        boolean valido = usuarioValidator.validarCamposPreenchidos(
+                txtNome.getText(),
+                txtEmail.getText(),
+                txtSenha.getText(),
+                txtLogin.getText(),
+                txtEspecialidade.getText()
+        );
+
+        if (!valido) {
+            exibirMensagem("Todos os campos devem ser preenchidos para atualizar!", true);
+            return;
+        }
+
+        usuarioService.atualizarUsuario(
+                usuarioSelecionado,
+                txtNome.getText(),
+                txtEmail.getText(),
+                txtSenha.getText(),
+                txtLogin.getText(),
+                txtEspecialidade.getText()
+        );
+
+        carregarUsuarios();
+        limparCamposFormulario();
+        exibirMensagem("Usuário atualizado com sucesso!", false);
+    }
+
+    private void limparCamposFormulario() {
+        txtNome.clear();
+        txtEmail.clear();
+        txtSenha.clear();
+        txtLogin.clear();
+        txtEspecialidade.clear();
+        tblEspecialidadesMedicas.getSelectionModel().clearSelection();
+    }
+
+    private void exibirMensagem(String texto, boolean isErro) {
+        lblMensagem.setText(texto);
+        lblMensagem.setStyle(isErro ? "-fx-text-fill: red;" : "-fx-text-fill: green;");
     }
 }
