@@ -10,7 +10,7 @@ import java.sql.SQLException;
 //Arquivo que gerencia a conexão com o Banco de Dados
 public class ConexaoBD {
 
-    static String conexao = "jdbc:postgresql://localhost:5433/EspecialidadesMedicas";
+    static String conexao = "jdbc:postgresql://localhost:5432/EspecialidadesMedicas";
     static String usuario = "postgres";
     static String senha = "postgres";
 
